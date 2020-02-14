@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
-const Agent = new mongoose_1.Schema({
+const User = new mongoose_1.Schema({
     name: {
         type: String,
         required: true
@@ -23,13 +23,8 @@ const Agent = new mongoose_1.Schema({
         required: true
     },
     imagePath: {
-        type: String,
-        required: true
-    },
-    company: {
-        type: String,
-        required: true
+        type: String
     }
 }, { timestamps: true });
-exports.default = mongoose_1.model("images", Agent);
-//# sourceMappingURL=Agent.js.map
+exports.default = mongoose_1.model("User", User);
+//# sourceMappingURL=User.js.map

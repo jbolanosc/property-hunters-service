@@ -4,44 +4,43 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const date_fns_1 = require("date-fns");
-const Agent_1 = __importDefault(require("../models/Agent"));
-const AgentSession_1 = __importDefault(require("../models/AgentSession"));
+const User_1 = __importDefault(require("../models/User"));
+const Session_1 = __importDefault(require("../models/Session"));
 const bcrypt_1 = require("../libs/bcrypt");
-async function getAgents(req, res) {
+async function getUsers(req, res) {
     try {
-        const agents = await Agent_1.default.find();
-        return res.json(agents).status(200);
+        const users = await User_1.default.find();
+        return res.json(users).status(200);
     }
     catch (ex) {
         return res.json(ex).status(500);
     }
 }
-exports.getAgents = getAgents;
-async function createAgent(req, res) {
+exports.getUsers = getUsers;
+async function createUser(req, res) {
     try {
-        const { name, lastname, email, company, phone } = req.body;
-        if (name && lastname && req.body.password && email && company && phone) {
-            const existAgent = await Agent_1.default.findOne({ email: email });
-            if (existAgent) {
+        const { name, lastname, email, phone } = req.body;
+        if (name && lastname && req.body.password && email && phone) {
+            const existUser = await User_1.default.findOne({ email: email });
+            if (existUser) {
                 res.json({ msg: "The email provided is already in use" });
             }
             else {
                 const password = await bcrypt_1.genPassword(req.body.password);
-                const newAgent = {
+                const newUser = {
                     name,
                     lastname,
                     password,
                     email,
-                    company,
                     phone,
                     imagePath: req.file.url || ""
                 };
-                const agent = new Agent_1.default(newAgent);
-                await agent.save();
+                const user = new User_1.default(newUser);
+                await user.save();
                 return res
                     .json({
                     message: "Agent Saved Successfully",
-                    agent
+                    user
                 })
                     .status(200);
             }
@@ -58,53 +57,52 @@ async function createAgent(req, res) {
         return res.json(ex).status(500);
     }
 }
-exports.createAgent = createAgent;
-async function getAgent(req, res) {
+exports.createUser = createUser;
+async function getUser(req, res) {
     const { id } = req.params;
-    const agent = await Agent_1.default.findById(id);
-    if (agent) {
-        return res.json(agent).status(200);
+    const user = await User_1.default.findById(id);
+    if (user) {
+        return res.json(user).status(200);
     }
     else {
-        return res.json({ msg: "No agent found." }).status(400);
+        return res.json({ msg: "No user found." }).status(400);
     }
 }
-exports.getAgent = getAgent;
-async function deleteAgent(req, res) {
+exports.getUser = getUser;
+async function deleteUser(req, res) {
     try {
         const { id } = req.params;
-        const agent = await Agent_1.default.findByIdAndRemove(id);
-        if (agent) {
-            return res.json({ message: "Agent Deleted" }).status(200);
+        const user = await User_1.default.findByIdAndRemove(id);
+        if (user) {
+            return res.json({ message: "User Deleted" }).status(200);
         }
         else {
-            return res.json({ msg: "No agent found." }).status(400);
+            return res.json({ msg: "No User found." }).status(400);
         }
     }
     catch (ex) {
         return res.json(ex).status(500);
     }
 }
-exports.deleteAgent = deleteAgent;
-async function updateAgent(req, res) {
+exports.deleteUser = deleteUser;
+async function updateUser(req, res) {
     try {
         const { id } = req.params;
-        const { name, lastname, email, company, phone } = req.body;
-        if (name && lastname && req.body.password && email && company && phone) {
+        const { name, lastname, email, phone } = req.body;
+        if (name && lastname && req.body.password && email && phone) {
             const password = await bcrypt_1.genPassword(req.body.password);
-            const updatedAgent = await Agent_1.default.findByIdAndUpdate(id, {
+            const updatedUser = await User_1.default.findByIdAndUpdate(id, {
                 name,
                 lastname,
                 password,
                 email,
-                company,
                 phone,
                 imagePath: req.file.url
             });
             return res
                 .json({
                 message: "Successfully updated",
-                updatedAgent
+                updatedUser
             })
                 .status(200);
         }
@@ -120,31 +118,31 @@ async function updateAgent(req, res) {
         res.json(ex).status(500);
     }
 }
-exports.updateAgent = updateAgent;
+exports.updateUser = updateUser;
 async function createSession(req, res, next) {
     const SESSION_EXPIRY_HOURS = 1;
     if (!req.body.email || !req.body.password)
         return res.json("Invalid data").status(400);
     try {
-        const agent = await Agent_1.default.findOne({ email: req.body.email });
-        const password = await bcrypt_1.passwordCompareSync(req.body.password, agent.password);
+        const user = await User_1.default.findOne({ email: req.body.email });
+        const password = await bcrypt_1.passwordCompareSync(req.body.password, user.password);
         if (!password)
             return res.json("invalid password or username").status(400);
         const expiresAt = date_fns_1.addHours(new Date(), SESSION_EXPIRY_HOURS);
-        const agentSession = new AgentSession_1.default({
-            agentId: agent.id,
+        const session = new Session_1.default({
+            userId: user.id,
             expiresAt: expiresAt
         });
-        await agentSession.save();
-        res.cookie("agentSessionId", agentSession.id, {
+        await session.save();
+        res.cookie("agentSessionId", session.id, {
             httpOnly: true,
             expires: expiresAt
         });
-        return res.json(agentSession);
+        return res.json(session);
     }
     catch (ex) {
         return res.json("An error Ocurred " + ex).status(500);
     }
 }
 exports.createSession = createSession;
-//# sourceMappingURL=agent.controller.js.map
+//# sourceMappingURL=user.controler.js.map
