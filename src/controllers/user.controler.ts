@@ -1,52 +1,47 @@
 import { Request, Response, NextFunction } from "express";
 import { addHours } from "date-fns";
-import uuid from "uuid";
 
-import Agent from "../models/Agent";
-import AgentSession from "../models/AgentSession";
+import User from "../models/User";
+import Session from "../models/Session";
 import { genPassword, passwordCompareSync } from "../libs/bcrypt";
 
-export async function getAgents(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function getUsers(req: Request, res: Response): Promise<Response> {
   try {
-    const agents = await Agent.find();
-    return res.json(agents).status(200);
+    const users = await User.find();
+    return res.json(users).status(200);
   } catch (ex) {
     return res.json(ex).status(500);
   }
 }
 
-export async function createAgent(
+export async function createUser(
   req: IMulterRequest,
   res: Response
 ): Promise<Response> {
   try {
-    const { name, lastname, email, company, phone } = req.body;
+    const { name, lastname, email, phone } = req.body;
 
-    if (name && lastname && req.body.password && email && company && phone) {
-      const existAgent = await Agent.findOne({ email: email });
-      if (existAgent) {
+    if (name && lastname && req.body.password && email && phone) {
+      const existUser = await User.findOne({ email: email });
+      if (existUser) {
         res.json({ msg: "The email provided is already in use" });
       } else {
         const password = await genPassword(req.body.password);
-        const newAgent = {
+        const newUser = {
           name,
           lastname,
           password,
           email,
-          company,
           phone,
           imagePath: req.file.url || ""
         };
 
-        const agent = new Agent(newAgent);
-        await agent.save();
+        const user = new User(newUser);
+        await user.save();
         return res
           .json({
             message: "Agent Saved Successfully",
-            agent
+            user
           })
           .status(200);
       }
@@ -62,55 +57,54 @@ export async function createAgent(
   }
 }
 
-export async function getAgent(req: Request, res: Response): Promise<Response> {
+export async function getUser(req: Request, res: Response): Promise<Response> {
   const { id } = req.params;
-  const agent = await Agent.findById(id);
-  if (agent) {
-    return res.json(agent).status(200);
+  const user = await User.findById(id);
+  if (user) {
+    return res.json(user).status(200);
   } else {
-    return res.json({ msg: "No agent found." }).status(400);
+    return res.json({ msg: "No user found." }).status(400);
   }
 }
 
-export async function deleteAgent(
+export async function deleteUser(
   req: Request,
   res: Response
 ): Promise<Response> {
   try {
     const { id } = req.params;
-    const agent = await Agent.findByIdAndRemove(id);
-    if (agent) {
-      return res.json({ message: "Agent Deleted" }).status(200);
+    const user = await User.findByIdAndRemove(id);
+    if (user) {
+      return res.json({ message: "User Deleted" }).status(200);
     } else {
-      return res.json({ msg: "No agent found." }).status(400);
+      return res.json({ msg: "No User found." }).status(400);
     }
   } catch (ex) {
     return res.json(ex).status(500);
   }
 }
 
-export async function updateAgent(
+export async function updateUser(
   req: IMulterRequest,
   res: Response
 ): Promise<Response> {
   try {
     const { id } = req.params;
-    const { name, lastname, email, company, phone } = req.body;
-    if (name && lastname && req.body.password && email && company && phone) {
+    const { name, lastname, email, phone } = req.body;
+    if (name && lastname && req.body.password && email && phone) {
       const password = await genPassword(req.body.password);
-      const updatedAgent = await Agent.findByIdAndUpdate(id, {
+      const updatedUser = await User.findByIdAndUpdate(id, {
         name,
         lastname,
         password,
         email,
-        company,
         phone,
         imagePath: req.file.url
       });
       return res
         .json({
           message: "Successfully updated",
-          updatedAgent
+          updatedUser
         })
         .status(200);
     } else {
@@ -135,27 +129,27 @@ export async function createSession(
     return res.json("Invalid data").status(400);
 
   try {
-    const agent = await Agent.findOne({ email: req.body.email });
+    const user = await User.findOne({ email: req.body.email });
     const password: boolean = await passwordCompareSync(
       req.body.password,
-      agent.password
+      user.password
     );
     if (!password) return res.json("invalid password or username").status(400);
 
     const expiresAt = addHours(new Date(), SESSION_EXPIRY_HOURS);
 
-    const agentSession = new AgentSession({
-      agentId: agent.id,
+    const session = new Session({
+      userId: user.id,
       expiresAt: expiresAt
     });
-    await agentSession.save();
+    await session.save();
 
-    res.cookie("agentSessionId", agentSession.id, {
+    res.cookie("agentSessionId", session.id, {
       httpOnly: true,
       expires: expiresAt
     });
 
-    return res.json(agentSession);
+    return res.json(session);
   } catch (ex) {
     return res.json("An error Ocurred " + ex).status(500);
   }

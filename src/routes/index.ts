@@ -1,29 +1,12 @@
 import { Router } from "express";
 const router = Router();
 
-import {
-  getAgents,
-  createAgent,
-  getAgent,
-  updateAgent,
-  deleteAgent
-} from "../controllers/agent.controller";
-import { parser } from "../libs/imageConfig";
+import AgentRouter from "./agent.routes";
+import UserRouter from "./user.routes";
+import PropertyRouter from "./property.routes";
 
-// routes
-router
-  .route("/agents")
-  .get(getAgents)
-  .post(parser.single("image"), createAgent);
-
-router
-  .route("/agent/:id")
-  .get(getAgent)
-  .delete(deleteAgent)
-  .put(updateAgent);
-
-
-
-
+router.use("/", AgentRouter);
+router.use("/", UserRouter);
+router.use("/", PropertyRouter);
 
 export default router;

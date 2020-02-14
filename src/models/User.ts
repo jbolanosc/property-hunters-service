@@ -1,5 +1,5 @@
 import { Schema, Document, model } from "mongoose";
-const Agent = new Schema(
+const User = new Schema(
   {
     name: {
       type: String,
@@ -22,25 +22,19 @@ const Agent = new Schema(
       required: true
     },
     imagePath: {
-      type: String,
-      required: true
-    },
-    company: {
-      type: String,
-      required: true
+      type: String
     }
   },
   { timestamps: true }
 );
 
-export interface IAgent extends Document {
+export interface IUser extends Document {
   name: String;
   lastname: String;
   password: String;
   email: String;
   phone: String;
   imagePath: String;
-  company: String;
 }
 
-export default model<IAgent>("images", Agent);
+export default model<IUser>("User", User);
